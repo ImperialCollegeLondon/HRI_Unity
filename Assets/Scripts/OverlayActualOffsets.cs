@@ -4,34 +4,23 @@ using UnityEngine;
 
 public class OverlayActualOffsets : MonoBehaviour {
 
-	//Overlay information for the actual path from the motor offsets
-	private List<Vector3> actualPath = new List<Vector3>();
-	//private LineRenderer actOverlayRenderer;
-	//Material actMaterial;					//Get the line renderer
+	//Overlay information for the commanded path (points sent in via ROS)
+	private List<Vector3> actPath = new List<Vector3>();
 
 	// Use this for initialization
 	void Start() {
-//		Color actualPathColour = Color.blue;
-//		actOverlayRenderer = gameObject.AddComponent<LineRenderer> ();
-//		actOverlayRenderer.material = GetComponent<Renderer>().material;
-//		//actOverlayRenderer.material = new Material (Shader.Find ("Standard"));
-//		actOverlayRenderer.startColor = actualPathColour;
-//		actOverlayRenderer.endColor = actualPathColour;
-//		actOverlayRenderer.startWidth = 1.0f;
-//		actOverlayRenderer.endWidth = 1.0f;
 
-		//Create a repeating invoked function after 5.0 seconds at a set period of 1.0 seconds
-		InvokeRepeating("DrawOverlay",5.0f, 1.0f);
+		//Create a repeating invoked function after 5.0 seconds at a set period of 0.5 seconds
+		InvokeRepeating("DrawOverlay",5.0f, 0.5f);
 	}
 
-	// Update is called once per frame
 	void DrawOverlay () {
 
 		//First Check Tunnel Steering has been chosen by the user
 		if (SetupScene.TunnelSteeringBool & SetupScene.StartProcedure) {
 
 			//Check information has been received over ros
-			if (!NeedleOffsets.offsetsRosReceived) {
+			if (ActPathOverlay.overlayActRosReceived) {
 
 				//Determine current position of the needle
 				GameObject needleCurrent = GameObject.Find ("needle");
@@ -40,73 +29,60 @@ public class OverlayActualOffsets : MonoBehaviour {
 				else {
 
 					//Get the line rendered from the game object (defined in Unity interface)
-					LineRenderer actOverlayRenderer = gameObject.GetComponent<LineRenderer>();
+					LineRenderer actOverlayRenderer = gameObject.GetComponent<LineRenderer> ();
+					Debug.Log ("Number of positions in actual overlay from ROS is: " + ActPathOverlay.overlayActRosPos.GetLength (0));
 
-					//Declare variables
-					float[] offsets = {0.2f, 0f, 0.4f, 0.7f};
-					//Debug.Log (NeedleOffsets.needleOffsets);
+					//Define transformation between ROS LH and Unity LH Frames
+					//Done by examination ROS(RH)[X Y Z] -> UNITY(LH)[Y -Z X], 
+					Quaternion ros2unityQuat = Quaternion.Euler (0, -90, 90);	//Order
+					Quaternion ros2unityQuatInverse = Quaternion.Inverse (ros2unityQuat);
 
-					//Determine the needle curvature (magnitude and angle) based on the offsets. 
-					//Plane references are in the local frame of the needle
-					float planeX = (float)offsets [0] + (float)offsets [1] - (float)offsets [2] - (float)offsets [3];
-					float planeZ = (float)offsets [1] + (float)offsets [2] - (float)offsets [0] - (float)offsets [3];
-					float planeAngleRaw = (Mathf.Atan2 (planeZ, planeX) * Mathf.Rad2Deg);
-					//Put in correction for unity frame + 180 planer change of angle to desired curvature
-					float planeAngle = (Mathf.Sign(planeAngleRaw)*180)-(Mathf.Sign(planeAngleRaw)*Mathf.Sign(planeAngleRaw)*planeAngleRaw);
-					float planeOffset = Mathf.Sqrt ((1/Mathf.Sqrt(2)*planeX * planeX) + (1/Mathf.Sqrt(2) * planeZ * planeZ));
-					float planeRadius = 1/(0.0008f * planeOffset);		//This is assuming a 25mm offset results in a radius of curvature of 50mm
-					float arcAngle = 0;	//Start at 90 degrees
-					float arcLength = 90;	//End angle - start angle (90 here would be a quarter of a circle)
-					int segments = 30;
-					float z_dash = 0f;
-					//Debug.Log ("Offsets: " + offsets + " PlaneX: " + planeX + " PlaneZ: " + planeZ);
-					//Debug.Log ("The original plane angle is: " + planeAngleRaw + " corrected planeAngle is: " + planeAngle + " and the planeRadius is: " + planeRadius);
+					for (int i = 0; i < ActPathOverlay.overlayActRosPos.GetLength (0); i++) {
 
-					//Prepare the vector of points defining the arc, and add this to the renderer list
-					for (int i = 0; i <= segments; i++) {
-						float x_dash = planeRadius - Mathf.Cos (Mathf.Deg2Rad * arcAngle) * planeRadius;
-						float y_dash = Mathf.Sin (Mathf.Deg2Rad * arcAngle) * planeRadius;
+						//Get starting point as the current pose of the needle tip
+						Vector3 globalNeedlePos = GameObject.Find ("needle").transform.position;
+						Quaternion globalNeedleQuat = GameObject.Find ("needle").transform.localRotation;
 
-						//Collect the point of the arc into a vector
-						Vector3 rawVector = new Vector3 (x_dash, y_dash, z_dash);
-						//Vector3 rawVector = new Vector3 (0, 1, i);
+						//Get overlay path points from the array
+						Vector3 posInt = ActPathOverlay.overlayActRosPos [i];
+						Quaternion quatInt = ActPathOverlay.overlayActRosQuat [i];
+						Debug.Log ("Actual Overlay Time step: " + i + ", ROS pos is: " + posInt);
 
-						//Rotate this vector according the curvature plane (rotation about y)
-						//Vector3 baseOverlayVector = Quaternion.Euler (0, planeAngle, 0) * rawVector;
-						Vector3 baseOverlayVector = Quaternion.Euler (0, planeAngle, 0) * rawVector;
+						//Convert ROS RH quaternion to ROS LH quaternion by mirroring the Z axis, and translation by negating z
+						Vector3 deltaPosLocalROS = new Vector3 (posInt.x, posInt.y, -1 * posInt.z);
+						Quaternion deltaQuatLocalROS = new Quaternion (-1 * quatInt.x, -1 * quatInt.y, quatInt.z, quatInt.w);
 
-						//Determine global position of the needle 
-						Vector3 needlePos = needleCurrent.transform.position;
-						Quaternion needleRot = needleCurrent.transform.localRotation;
-						Vector3 overlayVector = needlePos + (needleRot * baseOverlayVector);		//Vector transferred to global frame first
+						//Transform the overlay position in the local Unity LH frame
+						//Vector3 deltaPosLocal = ros2unityQuatInverse * (ros2unityQuat * deltaPosLocalROS);
+						Quaternion deltaQuatLocal = deltaQuatLocalROS * ros2unityQuatInverse;
 
-						//Add the vector to the rendered list
-						actualPath.Add (overlayVector);
+						//TEST - direct transformatin ROS(RH)[X Y Z] -> UNITY(LH)[Y -Z X]
+						Vector3 deltaPosLocal = new Vector3 (posInt.z, posInt.x, -1*posInt.y);
+						Debug.Log ("And Local Unity Act Pos is: " + deltaPosLocal);
 
-						//Increment the angle
-						arcAngle += (arcLength / segments);
+						//Change to global frame
+						Vector3 deltaPosGlobal = globalNeedlePos + (globalNeedleQuat * deltaPosLocal);		//deltaPosLocal transferred to global frame first
+						Quaternion deltaQuatGlobal = globalNeedleQuat * deltaQuatLocal;						//deltaQuatLocal is locally applied with this order of ops
+
+						//Add the vector to the rendered list (currently orientation ignored)
+						actPath.Add (deltaPosLocal);
 					}
 
 					//Change number of points to match that in the list
-					actOverlayRenderer.positionCount = actualPath.Count;
+					actOverlayRenderer.positionCount = actPath.Count;
+					Debug.Log ("Number of positions in overlay is: " + actPath.Count);
 
 					//Draw the actual path the needle will follow with respect to the needle tip
-					for (int i = 0; i < actualPath.Count; i++)
-					{
+					for (int j = 0; j < actPath.Count; j++) {
 						//Change the postion of the lines
-						actOverlayRenderer.SetPosition(i, actualPath[i]);
+						actOverlayRenderer.SetPosition (j, actPath [j]);
+						Debug.Log ("Setting overlay position " + j + " as: " + actPath [j]);
 					}
 
 					//Clear the list
-					actualPath.Clear();
+					actPath.Clear ();
 				}
 			}
 		}
-	}
-
-	void OnDestroy()
-	{
-		//Destroy the instance
-		//Destroy(actMaterial);
 	}
 }
