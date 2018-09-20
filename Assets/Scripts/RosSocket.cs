@@ -12,10 +12,10 @@ public class RosSocket : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        //ros = new ROSBridgeWebSocketConnection ("ws://155.198.42.230", 9090);
+        ros = new ROSBridgeWebSocketConnection ("ws://155.198.42.230", 9090);
         //ros = new ROSBridgeWebSocketConnection("ws://192.168.0.88", 9090);
         //ros = new ROSBridgeWebSocketConnection("ws://155.198.43.20", 9090); //Eloise PC
-		ros = new ROSBridgeWebSocketConnection("ws://146.169.169.139", 9090); //Eloise Laptop
+		//ros = new ROSBridgeWebSocketConnection("ws://146.169.169.139", 9090); //Eloise Laptop
         ros.AddSubscriber (typeof(TipPose));
 		ros.AddSubscriber (typeof(PathPoses));
 		ros.AddSubscriber (typeof(CmdPathOverlay));
