@@ -20,7 +20,7 @@ public class RosSocket : MonoBehaviour {
         ros.AddSubscriber (typeof(TipPose));
 		ros.AddSubscriber (typeof(PathPoses));
 		ros.AddSubscriber (typeof(CmdPathOverlay));
-		//ros.AddSubscriber (typeof(ActPathOverlay));
+		ros.AddSubscriber (typeof(ActPathOverlay));
 		//ros.AddSubscriber (typeof(NeedleOffsets));
 		ros.AddPublisher(typeof(CommandsToRos));
 		ros.Connect ();		

@@ -16,7 +16,7 @@ public class ActPathOverlay : ROSBridgeSubscriber {
 	public static bool overlayActRosReceived = false;
 
 	public new static string GetMessageTopic() {
-		return "/actualOverlayUnity";			//Need to create the rosPublisher for this topic
+		return "/actualOverlayUnity";
 	}  
 
 	public new static string GetMessageType() {
