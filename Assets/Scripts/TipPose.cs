@@ -9,7 +9,8 @@ using UnityEngine;
 public class TipPose : ROSBridgeSubscriber {
 		
 	public new static string GetMessageTopic() {
-		return "/NDI_Aurora_sensor_blended";
+		//return "/NDI_Aurora_sensor_blended";
+        return "tool_tracking/catheter_shape";
 	}  
 	
 	public new static string GetMessageType() {

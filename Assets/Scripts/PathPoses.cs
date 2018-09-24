@@ -16,7 +16,8 @@ public class PathPoses : ROSBridgeSubscriber {
 	public static bool pathRosReceived = false;
 
     public new static string GetMessageTopic() {
-		return "/referencePath";
+        //return "/referencePath";
+        return "path_replanning/path_updated";
 	}  
 	
 	public new static string GetMessageType() {
