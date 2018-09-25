@@ -55,7 +55,7 @@ public class CameraController : MonoBehaviour {
 	//Toggle visibility of the brain
 	void ToggleVisibility() {
 		// toggles the visibility of this gameobject and all it's children
-		GameObject brain = GameObject.Find ("brainTissue");
+		GameObject brain = GameObject.Find ("PTNT01_3D_FLAIR_Tra_GreyMatter");
 		if (brain == null) {
 		}
 		else {
@@ -92,7 +92,7 @@ public class CameraController : MonoBehaviour {
 				overheadView = !overheadView;
 
 				//Hide the brain by default
-				GameObject brain = GameObject.Find ("brainTissue");
+				GameObject brain = GameObject.Find ("PTNT01_3D_FLAIR_Tra_GreyMatter");
 				if (brain == null) {
 				}
 				else {

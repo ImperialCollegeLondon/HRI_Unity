@@ -30,7 +30,7 @@ public class OverlayActualOffsets : MonoBehaviour {
 
 					//Get the line rendered from the game object (defined in Unity interface)
 					LineRenderer actOverlayRenderer = gameObject.GetComponent<LineRenderer> ();
-					Debug.Log ("Number of positions in actual overlay from ROS is: " + ActPathOverlay.overlayActRosPos.GetLength (0));
+					//Debug.Log ("Number of positions in actual overlay from ROS is: " + ActPathOverlay.overlayActRosPos.GetLength (0));
 
 					//Define transformation between ROS LH and Unity LH Frames
 					//Done by examination ROS(RH)[X Y Z] -> UNITY(LH)[Y -Z X], 
@@ -46,7 +46,7 @@ public class OverlayActualOffsets : MonoBehaviour {
 						//Get overlay path points from the array
 						Vector3 posInt = ActPathOverlay.overlayActRosPos [i];
 						Quaternion quatInt = ActPathOverlay.overlayActRosQuat [i];
-						Debug.Log ("Actual Overlay Time step: " + i + ", ROS pos is: " + posInt);
+						//Debug.Log ("Actual Overlay Time step: " + i + ", ROS pos is: " + posInt);
 
 						//Convert ROS RH quaternion to ROS LH quaternion by mirroring the Z axis, and translation by negating z
 						Vector3 deltaPosLocalROS = new Vector3 (posInt.x, posInt.y, -1 * posInt.z);
@@ -58,7 +58,8 @@ public class OverlayActualOffsets : MonoBehaviour {
 
 						//TEST - direct transformatin ROS(RH)[X Y Z] -> UNITY(LH)[Y -Z X]
 						Vector3 deltaPosLocal = new Vector3 (posInt.z, posInt.x, -1*posInt.y);
-						Debug.Log ("And Local Unity Act Pos is: " + deltaPosLocal);
+						deltaPosLocal = Quaternion.Euler(0, 180, 0) * deltaPosLocal; //Seems to be required for the transparent shader
+						//Debug.Log ("And Local Unity Act Pos is: " + deltaPosLocal);
 
 						//Change to global frame
 						Vector3 deltaPosGlobal = globalNeedlePos + (globalNeedleQuat * deltaPosLocal);		//deltaPosLocal transferred to global frame first
@@ -70,13 +71,13 @@ public class OverlayActualOffsets : MonoBehaviour {
 
 					//Change number of points to match that in the list
 					actOverlayRenderer.positionCount = actPath.Count;
-					Debug.Log ("Number of positions in overlay is: " + actPath.Count);
+					//Debug.Log ("Number of positions in overlay is: " + actPath.Count);
 
 					//Draw the actual path the needle will follow with respect to the needle tip
 					for (int j = 0; j < actPath.Count; j++) {
 						//Change the postion of the lines
 						actOverlayRenderer.SetPosition (j, actPath [j]);
-						Debug.Log ("Setting overlay position " + j + " as: " + actPath [j]);
+						//Debug.Log ("Setting overlay position " + j + " as: " + actPath [j]);
 					}
 
 					//Clear the list

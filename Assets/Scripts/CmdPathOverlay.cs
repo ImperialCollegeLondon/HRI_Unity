@@ -16,7 +16,7 @@ public class CmdPathOverlay : ROSBridgeSubscriber {
 	public static bool overlayCmdRosReceived = false;
 
 	public new static string GetMessageTopic() {
-       	return "/cmdOverlay";		//Need to create the rosPublisher for this topic
+       	return "/cmdOverlay";
     }  
 
 	public new static string GetMessageType() {
