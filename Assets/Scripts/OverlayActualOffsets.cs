@@ -11,7 +11,7 @@ public class OverlayActualOffsets : MonoBehaviour {
 	void Start() {
 
 		//Create a repeating invoked function after 5.0 seconds at a set period of 0.5 seconds
-		InvokeRepeating("DrawOverlay",5.0f, 0.5f);
+		InvokeRepeating("DrawOverlay",5.0f, 0.25f);
 	}
 
 	void DrawOverlay () {
@@ -30,11 +30,29 @@ public class OverlayActualOffsets : MonoBehaviour {
 
 					//Get the line rendered from the game object (defined in Unity interface)
 					LineRenderer actOverlayRenderer = gameObject.GetComponent<LineRenderer> ();
-					//Debug.Log ("Number of positions in actual overlay from ROS is: " + ActPathOverlay.overlayActRosPos.GetLength (0));
+                    //Debug.Log ("Number of positions in actual overlay from ROS is: " + ActPathOverlay.overlayActRosPos.GetLength (0));
 
-					//Define transformation between ROS LH and Unity LH Frames
-					//Done by examination ROS(RH)[X Y Z] -> UNITY(LH)[Y -Z X], 
-					Quaternion ros2unityQuat = Quaternion.Euler (0, -90, 90);	//Order
+                    //GLOBAL REFERENCE
+                    for (int i = 0; i < ActPathOverlay.overlayActRosPos.GetLength(0); i++)
+                    {
+                        //Get overlay path points from the array
+                        Vector3 posInt = ActPathOverlay.overlayActRosPos[i];
+                        Quaternion quatInt = ActPathOverlay.overlayActRosQuat[i];
+                        //Debug.Log ("Actual Overlay Time step: " + i + ", ROS pos is: " + posInt);
+
+                        //Change to Unity frame by negating y axis and mirroring y axis
+                        Vector3 deltaPosLocal = new Vector3(posInt.x, -1 * posInt.y, posInt.z);
+                        Quaternion deltaQuatLocal = new Quaternion(-1 * quatInt.x, quatInt.y, -1 * quatInt.z, quatInt.w);
+                        //Debug.Log("Actual Overlay Time step: " + i + ", Unity pos is: " + deltaPosLocal);
+
+                        //Add the vector to the rendered list (currently orientation ignored)
+                        actPath.Add(deltaPosLocal);
+                    }
+
+                    /*LOCAL FRAME
+                    //Define transformation between ROS LH and Unity LH Frames
+                    //Done by examination ROS(RH)[X Y Z] -> UNITY(LH)[Y -Z X], 
+                    Quaternion ros2unityQuat = Quaternion.Euler (0, -90, 90);	//Order
 					Quaternion ros2unityQuatInverse = Quaternion.Inverse (ros2unityQuat);
 
 					for (int i = 0; i < ActPathOverlay.overlayActRosPos.GetLength (0); i++) {
@@ -67,13 +85,14 @@ public class OverlayActualOffsets : MonoBehaviour {
 
 						//Add the vector to the rendered list (currently orientation ignored)
 						actPath.Add (deltaPosLocal);
-					}
+					}*/
 
-					//Change number of points to match that in the list
-					actOverlayRenderer.positionCount = actPath.Count;
-					//Debug.Log ("Number of positions in overlay is: " + actPath.Count);
+                    //Change number of points to match that in the list
+                    actOverlayRenderer.positionCount = actPath.Count;
+                    //Debug.Log ("Number of positions in overlay is: " + actPath.Count);
 
-					//Draw the actual path the needle will follow with respect to the needle tip
+                    //Draw the actual path the needle will follow with respect to the needle tip
+                    //Debug.Log("Drawing the actual overlay");
 					for (int j = 0; j < actPath.Count; j++) {
 						//Change the postion of the lines
 						actOverlayRenderer.SetPosition (j, actPath [j]);

@@ -16,8 +16,9 @@ public class ActPathOverlay : ROSBridgeSubscriber {
 	public static bool overlayActRosReceived = false;
 
 	public new static string GetMessageTopic() {
-		return "/actualOverlayUnity";
-	}  
+		//return "/actualOverlayUnity";
+        return "/actualOverlay";
+    }  
 
 	public new static string GetMessageType() {
 		return "nav_msgs/Path";

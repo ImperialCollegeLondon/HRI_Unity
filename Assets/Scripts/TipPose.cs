@@ -30,26 +30,43 @@ public class TipPose : ROSBridgeSubscriber {
 			Debug.Log ("Can't find the needle in the scene");
 		else {
 
-			//Declare variables
-			PoseStampedMsg pose = (PoseStampedMsg) msg;
-			Vector3 globalStartPos;
-			Quaternion globalStartQuat;
+            //Declare variables
+            PoseStampedMsg pose = (PoseStampedMsg)msg;
 
-			//Determine the starting position of the needle
-			GameObject startPoint = GameObject.Find ("insertionPoint");
-			if (startPoint == null)
-				Debug.Log ("Can't find the insertion point in the scene");
-			else {
+            /*FOLLOWING IS FOR GLOBAL (PLAN SPACE) FRAME SENDING*/
+            //Read in needle transformation from ROS
+            Vector3 posROS = new Vector3(pose.getPoseMsg().GetPositionMsg().GetX(), pose.getPoseMsg().GetPositionMsg().GetY(), pose.getPoseMsg().GetPositionMsg().GetZ());
+            Quaternion quatROS = new Quaternion(pose.getPoseMsg().GetOrientationMsg().GetX(), pose.getPoseMsg().GetOrientationMsg().GetY(), pose.getPoseMsg().GetOrientationMsg().GetZ(), pose.getPoseMsg().GetOrientationMsg().GetW());
 
-				//Determine starting transformation of the needle
-				globalStartPos = startPoint.transform.position;
-				globalStartQuat = startPoint.transform.rotation;
+            //Convert ROS RH quaternion to ROS LH quaternion by mirroring the Y axis, and translation by negating Y
+            //Define the path point in Global Unity LH frame
+            Vector3 posROSLH = new Vector3(posROS.x, -1 * posROS.y, posROS.z);
+            Quaternion quatROSLH = new Quaternion(-1 * quatROS.x, quatROS.y, -1 * quatROS.z, quatROS.w);
 
-				//Quaternion idenQ = new Quaternion (0,0,0,1);
-				//Vector3 scale = new Vector3 (1, 1, 1);
+            //The current frame of the needle is that of LH Unity Plan Space
+            tip.transform.position = posROSLH;
+            tip.transform.rotation = quatROSLH;
 
-				//Read in needle transformation from ROS
-				Vector3 deltaPosROS = new Vector3 (pose.getPoseMsg().GetPositionMsg ().GetX (), pose.getPoseMsg().GetPositionMsg ().GetY (), pose.getPoseMsg().GetPositionMsg ().GetZ ());
+            /* FOLLOWING IS FOR LOCAL FRAME SENDING
+            //Declare variables
+            Vector3 globalStartPos;
+            Quaternion globalStartQuat;
+
+            //Determine the starting position of the needle
+            GameObject startPoint = GameObject.Find("insertionPoint");
+            if (startPoint == null)
+                Debug.Log("Can't find the insertion point in the scene");
+            else
+            {
+                //Determine starting transformation of the needle
+                globalStartPos = startPoint.transform.position;
+                globalStartQuat = startPoint.transform.rotation;
+
+                //Quaternion idenQ = new Quaternion (0,0,0,1);
+                //Vector3 scale = new Vector3 (1, 1, 1);
+
+               //Read in needle transformation from ROS
+               Vector3 deltaPosROS = new Vector3 (pose.getPoseMsg().GetPositionMsg ().GetX (), pose.getPoseMsg().GetPositionMsg ().GetY (), pose.getPoseMsg().GetPositionMsg ().GetZ ());
 				//Quaternion deltaQuatROS = new Quaternion (pose.getPoseMsg().GetOrientationMsg ().GetX, pose.getPoseMsg().GetOrientationMsg ().GetY, pose.getPoseMsg().GetOrientationMsg ().GetZ, pose.getPoseMsg().GetOrientationMsg ().GetW);
 				Quaternion deltaQuatROS = new Quaternion(0,0,0,1);
 
@@ -69,12 +86,12 @@ public class TipPose : ROSBridgeSubscriber {
 				//Change to global frame
 				Vector3 moveTip = globalStartPos + (globalStartQuat * start2tipPos);	//Start2tipPos transferred to global frame first
 				Quaternion rotateTip = globalStartQuat * start2tipQuat;					//Start2tipQuat is locally applied with this order of ops
-
+                
 				//Move the needle
 				tip.transform.rotation = rotateTip;
-				tip.transform.position = moveTip;
-
+				tip.transform.position = moveTip;  
 			}
+            */
 		}
 	}
 }

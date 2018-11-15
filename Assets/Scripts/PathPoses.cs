@@ -64,14 +64,16 @@ public class PathPoses : ROSBridgeSubscriber {
 	public static void CallBack(ROSBridgeMsg msg) {
 
 		//Handle the message callback and save the path
-		//Debug.Log (GetMessageTopic () + " received");
 		pathRosReceived = true;
 
 		//Declare variables
 		PathMsg pathmsg_ = (PathMsg)msg;
 
-		//Initialise length based on number of points in the path
-		pathRosPos = new Vector3[pathmsg_.getPathLength ()];
+        //Debug message
+        Debug.Log(GetMessageTopic() + " received with number of points: " + pathmsg_.getPathLength());
+
+        //Initialise length based on number of points in the path
+        pathRosPos = new Vector3[pathmsg_.getPathLength ()];
 		pathRosQuat = new Quaternion[pathmsg_.getPathLength ()];
 
 		//Read in the array of path positions and orientations
