@@ -6,6 +6,8 @@ Open Assets/_Scenes/brain.unity
 
 Build the binary from the Main Menu according to your build computer specifications (please place in Build folder, this will be ignored by Git)
 
+Note: Assets may need to be reimported e.g. if prefabs are broken.
+
 # Unity Software Version
 
 Current version as of 9/11/2017 has been made using Unity 2017.2.0f3 (64 bit)
